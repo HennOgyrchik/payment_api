@@ -29,7 +29,7 @@ func checkUser(id uint) (ok bool, err error) {
 }
 
 func DbConnection() *sql.DB {
-	connStr := "user=test password=123 dbname=postgres sslmode=disable port=5431"
+	connStr := "user=test password=123 dbname=postgres sslmode=disable port=5432" //ip = postgres
 	db, err := sql.Open("postgres", connStr)
 
 	if err != nil {
