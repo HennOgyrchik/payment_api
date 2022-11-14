@@ -1,0 +1,81 @@
+openapi: 3.0.3
+info:
+  title: Swagger Turbo-Carnival - OpenAPI 3.0
+  version: 1.0.1
+servers:
+  - url: https://192.168.0.123:1010/
+paths:
+  /balance:
+    get:
+      tags:
+        - user
+      summary: Получение баланса
+      description: Получение баланса пользователя по ID
+      operationId: GetBalance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ID'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: User not found
+  /replenish:
+    get:
+      tags:
+        - user
+      summary: Пополнение баланса
+      description: Пополнение баланса пользователя по ID на Count единиц
+      operationId: ReplenishBalance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IDandCount'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: User not found
+
+components:
+  schemas:
+    ID:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint
+          example: 10
+    Balance:
+      type: object
+      properties:
+        Id:
+          type: integer
+          example: 10
+        Cash:
+          type: string
+          example: 100
+    IDandCount:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint
+          example: 10
+        Count:
+          type: integer
+          format: uint
+          example: 50
