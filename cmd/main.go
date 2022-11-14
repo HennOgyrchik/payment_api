@@ -11,6 +11,7 @@ func main() {
 
 	// Route => handler
 	e.GET("/balance", api.GetBalance)
+	e.GET("/replenish", api.ReplenishBalance)
 
 	// Start the Echo server
 	e.Logger.Fatal(e.Start(":1010"))

@@ -8,7 +8,7 @@ import (
 
 type User struct {
 	Id   int
-	Cash int
+	Cash string
 }
 
 func DbConnection() *sql.DB {
@@ -21,7 +21,7 @@ func DbConnection() *sql.DB {
 	return db
 }
 
-func GetBalance(userId int) (cash string, err error) {
+func GetBalance(user *User) (err error) {
 	db := DbConnection()
 	defer db.Close()
 
@@ -29,10 +29,33 @@ func GetBalance(userId int) (cash string, err error) {
 	if err != nil {
 		return
 	}
-	fmt.Println(cash)
-	err = stmt.QueryRow(userId).Scan(&cash)
+
+	err = stmt.QueryRow(user.Id).Scan(&user.Cash)
 	if err != nil {
 		return
 	}
 	return
+}
+
+func Replenish(user *struct{ Id, Count uint }) (err error) {
+	db := DbConnection()
+	defer db.Close()
+
+	stmt, err := db.Prepare("select id from users where id=$1")
+	if err != nil {
+		return
+	}
+
+	err = stmt.QueryRow(user.Id).Scan(&user.Id)
+	if err != nil {
+		return
+	}
+
+	stmt, err = db.Prepare("update users set cash=cash+$1 where id=$2")
+	if err != nil {
+		return
+	}
+
+	_ = stmt.QueryRow(user.Count, user.Id)
+	return err
 }
