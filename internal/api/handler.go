@@ -52,7 +52,7 @@ func Reserve(c echo.Context) error {
 	}
 	err = postgresql.WriteTransaction(transaction)
 	if err != nil {
-		return c.String(http.StatusNotFound, "User not found")
+		return c.String(http.StatusNoContent, "Insufficient funds")
 	}
-	return err
+	return c.String(http.StatusOK, "Ok")
 }

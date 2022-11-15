@@ -3,7 +3,6 @@ package postgresql
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	_ "github.com/lib/pq"
 )
 
@@ -13,7 +12,10 @@ type User struct {
 }
 
 func checkUser(id uint) (ok bool, err error) {
-	db := DbConnection()
+	db, err := DbConnection()
+	if err != nil {
+		return
+	}
 	defer db.Close()
 
 	stmt, err := db.Prepare("select id from users where id=$1")
@@ -28,14 +30,14 @@ func checkUser(id uint) (ok bool, err error) {
 	return true, nil
 }
 
-func DbConnection() *sql.DB {
-	connStr := "user=test password=123 dbname=postgres sslmode=disable port=5432" //ip = postgres
+func DbConnection() (*sql.DB, error) {
+	connStr := "user=test password=123 dbname=postgres sslmode=disable host=postgres port=5432" //ip = postgres
 	db, err := sql.Open("postgres", connStr)
 
 	if err != nil {
-		fmt.Printf("Ошибка подключения к БД:%s\n", err)
+		return nil, err
 	}
-	return db
+	return db, nil
 }
 
 func GetBalance(user *User) (err error) {
@@ -48,8 +50,12 @@ func GetBalance(user *User) (err error) {
 		return errors.New("User not found")
 	}
 
-	db := DbConnection()
+	db, err := DbConnection()
+	if err != nil {
+		return
+	}
 	defer db.Close()
+
 	stmt, err := db.Prepare("select cash from users where id=$1")
 	if err != nil {
 		return
@@ -71,7 +77,10 @@ func Replenish(user *struct{ Id, Count uint }) (err error) {
 	if ok == false {
 		return errors.New("User not found")
 	}
-	db := DbConnection()
+	db, err := DbConnection()
+	if err != nil {
+		return
+	}
 	defer db.Close()
 
 	stmt, err := db.Prepare("update users set cash=cash+$1 where id=$2")
@@ -85,21 +94,34 @@ func Replenish(user *struct{ Id, Count uint }) (err error) {
 
 func WriteTransaction(transaction struct{ UserID, ServiceID, OrderID, Cost uint }) error {
 	ok, err := checkUser(transaction.UserID)
-
 	if err != nil {
 		return err
 	}
 	if ok == false {
-		return errors.New("User not found")
+		return err
 	}
-	db := DbConnection()
+
+	db, err := DbConnection()
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 
-	stmt, err := db.Prepare("insert into transaction values (default,$1,$2,$3,$4, 'debet')")
+	stmt, err := db.Prepare("insert into transactions values (default,$1,$2,$3,$4, 'debet')returning id")
+	if err != nil {
+		return err
+	}
+	var val string
+	err = stmt.QueryRow(transaction.UserID, transaction.ServiceID, transaction.OrderID, transaction.Cost).Scan(&val)
 	if err != nil {
 		return err
 	}
 
-	_ = stmt.QueryRow(transaction.UserID, transaction.ServiceID, transaction.OrderID, transaction.Cost)
+	err = Replenish(&struct{ Id, Count uint }{1, transaction.Cost})
+	if err != nil {
+		_ = db.QueryRow("delete from transactions where id=" + val)
+		return err
+	}
+
 	return err
 }
