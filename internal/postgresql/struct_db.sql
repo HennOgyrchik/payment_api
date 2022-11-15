@@ -19,9 +19,9 @@ if NEW.COST>cash then
 return NULL;
 Elseif NEW.type='debet' then
 update users set cash =users.cash-new.cost where id=new.user_id;
+update users set cash=users.cash+new.cost where id=1;
 return NEW;
 Elseif NEW.type='credit' then
-
 update users set cash =users.cash+new.cost where id=new.user_id;
 return NEW;
 Else

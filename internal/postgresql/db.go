@@ -7,11 +7,14 @@ import (
 )
 
 type User struct {
-	Id   uint
-	Cash string
+	Id        uint `json:"user_id"`
+	Cash      string
+	Count     uint
+	OrderID   uint `json:"order_id"`
+	ServiceID uint `json:"service_id"`
 }
 
-func checkUser(id uint) (ok bool, err error) {
+func (u *User) checkUser() (ok bool, err error) {
 	db, err := DbConnection()
 	if err != nil {
 		return
@@ -23,15 +26,16 @@ func checkUser(id uint) (ok bool, err error) {
 		return
 	}
 	var temp int
-	err = stmt.QueryRow(id).Scan(&temp)
+	err = stmt.QueryRow(u.Id).Scan(&temp)
 	if err != nil {
+
 		return
 	}
 	return true, nil
 }
 
 func DbConnection() (*sql.DB, error) {
-	connStr := "user=test password=123 dbname=postgres sslmode=disable host=postgres port=5432" //ip = postgres
+	connStr := "user=test password=123 dbname=postgres sslmode=disable host=postgres port=5432"
 	db, err := sql.Open("postgres", connStr)
 
 	if err != nil {
@@ -41,18 +45,14 @@ func DbConnection() (*sql.DB, error) {
 }
 
 func GetBalance(user *User) (err error) {
-	ok, err := checkUser(user.Id)
-
-	if err != nil {
-		return err
-	}
-	if ok == false {
-		return errors.New("User not found")
+	ok, err := user.checkUser()
+	if (err != nil) || (ok == false) {
+		return
 	}
 
 	db, err := DbConnection()
 	if err != nil {
-		return
+		return errors.New("Database connection error")
 	}
 	defer db.Close()
 
@@ -68,15 +68,12 @@ func GetBalance(user *User) (err error) {
 	return
 }
 
-func Replenish(user *struct{ Id, Count uint }) (err error) {
-	ok, err := checkUser(user.Id)
-
-	if err != nil {
+func Replenish(user *User) (err error) {
+	ok, err := user.checkUser()
+	if (err != nil) || (ok == false) {
 		return err
 	}
-	if ok == false {
-		return errors.New("User not found")
-	}
+
 	db, err := DbConnection()
 	if err != nil {
 		return
@@ -92,12 +89,9 @@ func Replenish(user *struct{ Id, Count uint }) (err error) {
 	return err
 }
 
-func WriteTransaction(transaction struct{ UserID, ServiceID, OrderID, Cost uint }) error {
-	ok, err := checkUser(transaction.UserID)
-	if err != nil {
-		return err
-	}
-	if ok == false {
+func WriteTransaction(user *User) error {
+	ok, err := user.checkUser()
+	if (err != nil) || (ok == false) {
 		return err
 	}
 
@@ -112,16 +106,26 @@ func WriteTransaction(transaction struct{ UserID, ServiceID, OrderID, Cost uint 
 		return err
 	}
 	var val string
-	err = stmt.QueryRow(transaction.UserID, transaction.ServiceID, transaction.OrderID, transaction.Cost).Scan(&val)
+	err = stmt.QueryRow(user.Id, user.ServiceID, user.OrderID, user.Count).Scan(&val)
 	if err != nil {
 		return err
 	}
 
-	err = Replenish(&struct{ Id, Count uint }{1, transaction.Cost})
+	err = Replenish(user)
 	if err != nil {
 		_ = db.QueryRow("delete from transactions where id=" + val)
 		return err
 	}
 
 	return err
+}
+
+func RecognizeRevenue(user *User) (err error) {
+	ok, err := user.checkUser()
+	if (err != nil) || (ok == false) {
+		return
+	}
+	//списывает из резерва деньги, добавляет данные в отчет для бухгалтерии. Принимает id пользователя, ИД услуги, ИД заказа, сумму
+
+	return
 }

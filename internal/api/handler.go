@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	_ "fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"turbo-carnival/internal/postgresql"
@@ -12,10 +11,10 @@ func GetBalance(c echo.Context) error {
 	var user postgresql.User
 
 	err := json.NewDecoder(c.Request().Body).Decode(&user)
-	if err != nil {
+	if (err != nil) || (user.Id == 0) {
 		return c.String(http.StatusBadRequest, "Bad request")
 	}
-
+	//fmt.Println(user)
 	err = postgresql.GetBalance(&user)
 	if err != nil {
 
@@ -27,11 +26,9 @@ func GetBalance(c echo.Context) error {
 }
 
 func ReplenishBalance(c echo.Context) error {
-	user := struct {
-		Id, Count uint
-	}{}
+	var user postgresql.User
 	err := json.NewDecoder(c.Request().Body).Decode(&user)
-	if err != nil {
+	if (err != nil) || (user.Id == 0) {
 		return c.String(http.StatusBadRequest, "Bad request")
 	}
 
@@ -43,16 +40,29 @@ func ReplenishBalance(c echo.Context) error {
 }
 
 func Reserve(c echo.Context) error {
-	transaction := struct {
-		UserID, ServiceID, OrderID, Cost uint
-	}{}
-	err := json.NewDecoder(c.Request().Body).Decode(&transaction)
-	if err != nil {
+	var user postgresql.User
+	err := json.NewDecoder(c.Request().Body).Decode(&user)
+	if (err != nil) || (user.Id == 0) {
 		return c.String(http.StatusBadRequest, "Bad request")
 	}
-	err = postgresql.WriteTransaction(transaction)
+	err = postgresql.WriteTransaction(&user)
 	if err != nil {
 		return c.String(http.StatusNoContent, "Insufficient funds")
 	}
+	return c.String(http.StatusOK, "Ok")
+}
+
+func Revenue(c echo.Context) error {
+	var user postgresql.User
+	err := json.NewDecoder(c.Request().Body).Decode(&user)
+	if (err != nil) || (user.Id == 0) {
+		return c.String(http.StatusBadRequest, "Bad request")
+	}
+
+	err = postgresql.RecognizeRevenue(&user)
+	if err != nil {
+		return c.String(http.StatusNoContent, "Insufficient funds") //изменить текст
+	}
+
 	return c.String(http.StatusOK, "Ok")
 }
