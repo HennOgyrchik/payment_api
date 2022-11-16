@@ -1,10 +1,6 @@
 create table users (
-                       id serial,
-                       cash integer not null default 0);
-
-create table users (
-                      id integer generated always as identity,
-                      cash integer default 0 check (cash>=0));
+                       id integer unique not null,
+                       cash integer default 0 check (cash>=0));
 
 create table transactions (
                               id serial,
@@ -25,7 +21,7 @@ CASE NEW.type
         update users set cash =users.cash+new.cost where id=new.user_id;
         return NEW;
     WHEN 'revenue' THEN
-        update users set cash =users.cash-new.cost where id=1;
+        update users set cash =users.cash-new.cost where id=-1;
         return NEW;
     WHEN 'buy' THEN
         cash:=(select users.cash from users where id=NEW.USER_ID);
@@ -33,7 +29,7 @@ CASE NEW.type
             return NULL;
         ELSE
             update users set cash =users.cash-new.cost where id=new.user_id;
-            update users set cash=users.cash+new.cost where id=1;
+            update users set cash=users.cash+new.cost where id=-1;
             return NEW;
         END IF;
     ELSE return NULL;
@@ -43,6 +39,4 @@ $BODY$
 language plpgsql;
 
 create or replace trigger check_balance before insert on transactions for each row execute function check_cash();
-
-insert into users (cash) values (default);  --создание пользователя со следующим ID и Cash=0
 
