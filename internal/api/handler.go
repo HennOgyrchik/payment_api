@@ -11,30 +11,32 @@ func GetBalance(c echo.Context) error {
 	var user postgresql.User
 
 	err := json.NewDecoder(c.Request().Body).Decode(&user)
-	if (err != nil) || (user.Id == 0) {
+	if err != nil {
 		return c.String(http.StatusBadRequest, "Bad request")
 	}
-	//fmt.Println(user)
+
 	err = postgresql.GetBalance(&user)
 	if err != nil {
 
-		return c.String(http.StatusNotFound, "User not found")
+		return c.String(http.StatusBadRequest, "Bad request")
 	}
 
-	return c.JSON(http.StatusOK, user)
+	return c.JSON(http.StatusOK, struct {
+		Cash uint
+	}{user.Cash})
 
 }
 
 func ReplenishBalance(c echo.Context) error {
 	var user postgresql.User
 	err := json.NewDecoder(c.Request().Body).Decode(&user)
-	if (err != nil) || (user.Id == 0) {
+	if err != nil {
 		return c.String(http.StatusBadRequest, "Bad request")
 	}
 
 	err = postgresql.Replenish(&user)
 	if err != nil {
-		return c.String(http.StatusNotFound, "User not found")
+		return c.String(http.StatusBadRequest, "Bad request")
 	}
 	return c.String(http.StatusOK, "Ok")
 }
@@ -42,12 +44,12 @@ func ReplenishBalance(c echo.Context) error {
 func Reserve(c echo.Context) error {
 	var user postgresql.User
 	err := json.NewDecoder(c.Request().Body).Decode(&user)
-	if (err != nil) || (user.Id == 0) {
+	if err != nil {
 		return c.String(http.StatusBadRequest, "Bad request")
 	}
 	err = postgresql.WriteTransaction(&user)
 	if err != nil {
-		return c.String(http.StatusNoContent, "Insufficient funds")
+		return c.String(http.StatusBadRequest, "Bad request")
 	}
 	return c.String(http.StatusOK, "Ok")
 }
@@ -55,13 +57,13 @@ func Reserve(c echo.Context) error {
 func Revenue(c echo.Context) error {
 	var user postgresql.User
 	err := json.NewDecoder(c.Request().Body).Decode(&user)
-	if (err != nil) || (user.Id == 0) {
+	if err != nil {
 		return c.String(http.StatusBadRequest, "Bad request")
 	}
 
 	err = postgresql.RecognizeRevenue(&user)
 	if err != nil {
-		return c.String(http.StatusNoContent, "Insufficient funds") //изменить текст
+		return c.String(http.StatusBadRequest, "Bad request")
 	}
 
 	return c.String(http.StatusOK, "Ok")

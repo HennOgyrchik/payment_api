@@ -7,8 +7,6 @@ servers:
 paths:
   /balance:
     get:
-      tags:
-        - user
       summary: Получение баланса
       description: Получение баланса пользователя по ID
       operationId: GetBalance
@@ -26,13 +24,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Balance'
         '400':
-          description: Invalid ID supplied
-        '404':
-          description: User not found
+          description: Bad request
   /replenish:
-    get:
-      tags:
-        - user
+    put:
       summary: Пополнение баланса
       description: Пополнение баланса пользователя по ID на Count единиц
       operationId: ReplenishBalance
@@ -40,22 +34,52 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/IDandCount'
+              $ref: '#/components/schemas/IDAndCount'
         required: true
       responses:
         '200':
           description: Successful operation
         '400':
-          description: Invalid ID supplied
-        '404':
-          description: User not found
+          description: Bad request
+  /reserve:
+    put:
+      summary: Резервирование средств
+      description: Списание средств со счета пользователя и зачисление их на резервный счет
+      operationId: Reserve
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FullStruct'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Bad request
+  /revenue:
+    put:
+      summary: Признание выручки
+      description: Списание средств с резервного счета
+      operationId: Revenue
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FullStruct'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Bad request
 
 components:
   schemas:
     ID:
       type: object
       properties:
-        id:
+        Id:
           type: integer
           format: uint
           example: 10
@@ -66,15 +90,34 @@ components:
           type: integer
           example: 10
         Cash:
-          type: string
+          type: integer
           example: 100
-    IDandCount:
+    IDAndCount:
       type: object
       properties:
-        id:
+        Id:
           type: integer
           format: uint
           example: 10
+        Count:
+          type: integer
+          format: uint
+          example: 50
+    FullStruct:
+      type: object
+      properties:
+        Id:
+          type: integer
+          format: uint
+          example: 10
+        Service_ID:
+          type: integer
+          format: uint
+          example: 50
+        Order_id:
+          type: integer
+          format: uint
+          example: 50
         Count:
           type: integer
           format: uint

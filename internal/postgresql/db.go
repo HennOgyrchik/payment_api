@@ -2,16 +2,15 @@ package postgresql
 
 import (
 	"database/sql"
-	"errors"
+	"fmt"
 	_ "github.com/lib/pq"
 )
 
 type User struct {
-	Id        uint `json:"user_id"`
-	Cash      string
-	Count     uint
-	OrderID   uint `json:"order_id"`
-	ServiceID uint `json:"service_id"`
+	Id          uint `json:"user_id"`
+	Cash, Count uint
+	OrderID     uint `json:"order_id"`
+	ServiceID   uint `json:"service_id"`
 }
 
 func (u *User) checkUser() (ok bool, err error) {
@@ -46,13 +45,13 @@ func DbConnection() (*sql.DB, error) {
 
 func GetBalance(user *User) (err error) {
 	ok, err := user.checkUser()
-	if (err != nil) || (ok == false) {
+	if (err != nil) || (ok != true) {
 		return
 	}
 
 	db, err := DbConnection()
 	if err != nil {
-		return errors.New("Database connection error")
+		return
 	}
 	defer db.Close()
 
@@ -70,7 +69,7 @@ func GetBalance(user *User) (err error) {
 
 func Replenish(user *User) (err error) {
 	ok, err := user.checkUser()
-	if (err != nil) || (ok == false) {
+	if (err != nil) || (ok != true) {
 		return err
 	}
 
@@ -80,52 +79,76 @@ func Replenish(user *User) (err error) {
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare("update users set cash=cash+$1 where id=$2")
+	stmt, err := db.Prepare("insert into transactions (id, user_id,cost,type) values (default,$1,$2,'replenishment')returning id")
 	if err != nil {
 		return
 	}
-
-	_ = stmt.QueryRow(user.Count, user.Id)
-	return err
+	var val string
+	err = stmt.QueryRow(user.Id, user.Count).Scan(&val)
+	if err != nil {
+		return
+	}
+	return
 }
 
-func WriteTransaction(user *User) error {
+func WriteTransaction(user *User) (err error) {
 	ok, err := user.checkUser()
-	if (err != nil) || (ok == false) {
-		return err
+	if (err != nil) || (ok != true) {
+		return
 	}
 
 	db, err := DbConnection()
 	if err != nil {
-		return err
+		return
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare("insert into transactions values (default,$1,$2,$3,$4, 'debet')returning id")
+	stmt, err := db.Prepare("insert into transactions values (default,$1,$2,$3,$4, 'buy')returning id")
 	if err != nil {
-		return err
+		return
 	}
 	var val string
 	err = stmt.QueryRow(user.Id, user.ServiceID, user.OrderID, user.Count).Scan(&val)
 	if err != nil {
-		return err
+		return
 	}
 
-	err = Replenish(user)
-	if err != nil {
-		_ = db.QueryRow("delete from transactions where id=" + val)
-		return err
-	}
-
-	return err
+	return
 }
 
 func RecognizeRevenue(user *User) (err error) {
 	ok, err := user.checkUser()
-	if (err != nil) || (ok == false) {
+	if (err != nil) || (ok != true) {
 		return
 	}
-	//списывает из резерва деньги, добавляет данные в отчет для бухгалтерии. Принимает id пользователя, ИД услуги, ИД заказа, сумму
+
+	db, err := DbConnection()
+	if err != nil {
+		return
+	}
+	defer db.Close()
+
+	stmt, err := db.Prepare(" select id from transactions where user_id=$1 and service_id=$2 and order_id=$3 and cost=$4 and type='buy'")
+	if err != nil {
+		return
+	}
+
+	var result int
+	err = stmt.QueryRow(user.Id, user.ServiceID, user.OrderID, user.Count).Scan(&result)
+	if err != nil {
+		return
+	}
+	fmt.Println(result)
+
+	stmt, err = db.Prepare("insert into transactions values (default,$1,$2,$3,$4, 'revenue')returning id")
+	if err != nil {
+		return
+	}
+	var val string
+	err = stmt.QueryRow(user.Id, user.ServiceID, user.OrderID, user.Count).Scan(&val)
+	if err != nil {
+		return
+	}
 
 	return
 }

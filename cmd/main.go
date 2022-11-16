@@ -13,7 +13,7 @@ func main() {
 	e.GET("/balance", api.GetBalance)
 	e.PUT("/replenish", api.ReplenishBalance)
 	e.PUT("/reserve", api.Reserve)
-	e.PUT("/reserve", api.Revenue)
+	e.PUT("/revenue", api.Revenue)
 
 	// Start the Echo server
 	e.Logger.Fatal(e.Start(":1010"))
