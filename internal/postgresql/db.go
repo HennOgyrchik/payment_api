@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
+	"turbo-carnival/internal/config"
 )
 
 type User struct {
@@ -27,7 +28,11 @@ func (u *User) checkUser(db *sql.DB) (err error) {
 }
 
 func DbConnection() (*sql.DB, error) {
-	connStr := "user=test password=123 dbname=postgres sslmode=disable host=postgres port=5432"
+	c := config.GetConfig()
+	connStr := fmt.Sprintf("user=%s password=%s dbname=postgres sslmode=disable host=%s port=%s", c.PSQLLogin, c.PSQLPass, c.DBHost, c.PSQLPort)
+	//fmt.Println(test)
+
+	//connStr := "user=test password=123 dbname=postgres sslmode=disable host=postgres port=5432"
 	db, err := sql.Open("postgres", connStr)
 
 	if err != nil {

@@ -11,6 +11,8 @@ services:
     build:
       context: ./
     image: "turbo-carnival:1.0"
+    volumes:
+      - ./cmd/config.yaml:/opt/config.yaml:ro
     ports:
       - "1010:1010"
     depends_on:
