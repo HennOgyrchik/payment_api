@@ -14,6 +14,7 @@ func main() {
 	e.PUT("/replenish", api.ReplenishBalance)
 	e.PUT("/reserve", api.Reserve)
 	e.PUT("/revenue", api.Revenue)
+	e.GET("/task1", api.Task1)
 
 	// Start the Echo server
 	e.Logger.Fatal(e.Start(":1010"))
