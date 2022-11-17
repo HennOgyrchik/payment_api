@@ -8,7 +8,8 @@ create table transactions (
                               service_id integer,
                               order_id integer ,
                               cost integer not null,
-                              type varchar(20) not null);
+                              type varchar(20) not null,
+                              date date default current_date not null);
 
 create unique index order_type_idx on transactions (order_id, type);
 
@@ -39,4 +40,3 @@ $BODY$
 language plpgsql;
 
 create or replace trigger check_balance before insert on transactions for each row execute function check_cash();
-

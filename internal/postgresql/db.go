@@ -2,8 +2,11 @@ package postgresql
 
 import (
 	"database/sql"
-	"fmt"
+	"encoding/csv"
 	_ "github.com/lib/pq"
+	"os"
+	"strconv"
+	"time"
 	"turbo-carnival/internal/config"
 )
 
@@ -85,7 +88,7 @@ func Replenish(user *User) (err error) {
 		}
 	}
 
-	stmt, err := db.Prepare("insert into transactions (id, user_id,cost,type) values (default,$1,$2,'replenishment')returning id")
+	stmt, err := db.Prepare("insert into transactions (id, user_id,cost,type,date) values (default,$1,$2,'replenishment',default)returning id")
 	if err != nil {
 		return
 	}
@@ -120,7 +123,7 @@ func WriteTransaction(user *User) (err error) {
 		return
 	}
 
-	stmt, err := db.Prepare("insert into transactions values (default,$1,$2,$3,$4, 'buy')returning id")
+	stmt, err := db.Prepare("insert into transactions values (default,$1,$2,$3,$4, 'buy',default)returning id")
 	if err != nil {
 		return
 	}
@@ -155,9 +158,8 @@ func RecognizeRevenue(user *User) (err error) {
 	if err != nil {
 		return
 	}
-	fmt.Println(result)
 
-	stmt, err = db.Prepare("insert into transactions values (default,$1,$2,$3,$4, 'revenue')returning id")
+	stmt, err = db.Prepare("insert into transactions values (default,$1,$2,$3,$4, 'revenue',default)returning id")
 	if err != nil {
 		return
 	}
@@ -168,4 +170,53 @@ func RecognizeRevenue(user *User) (err error) {
 	}
 
 	return
+}
+
+func MonthlyReport(t time.Time) (err error) {
+	db, err := DbConnection()
+	if err != nil {
+		return
+	}
+	defer db.Close()
+
+	stmt, err := db.Prepare("select service_id, SUM(cost) from transactions where type='revenue' AND (date >= $1 and date < (date($1) + INTERVAL '1 month')) group by service_id;")
+	if err != nil {
+		return
+	}
+
+	rows, err := stmt.Query(t)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	var arr [][]string
+	arr = append(arr, []string{"Service_ID", "Sum"})
+
+	for rows.Next() {
+		var servID, sum int
+		if err := rows.Scan(&servID, &sum); err != nil {
+			return err
+		}
+		arr = append(arr, []string{strconv.Itoa(servID), strconv.Itoa(sum)})
+
+	}
+	//////////////
+
+	f, err := os.Create("report.csv")
+	defer f.Close()
+	if err != nil {
+		return
+	}
+
+	w := csv.NewWriter(f)
+	w.Comma = ';'
+	for _, record := range arr {
+		if err := w.Write(record); err != nil {
+			return err
+		}
+	}
+	w.Flush()
+
+	return err
 }
