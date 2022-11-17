@@ -3,7 +3,6 @@ package postgresql
 import (
 	"database/sql"
 	"encoding/csv"
-	"fmt"
 	_ "github.com/lib/pq"
 	"os"
 	"strconv"
@@ -168,7 +167,7 @@ func RecognizeRevenue(user *User) (err error) {
 	return
 }
 
-func Task1(t time.Time) (err error) {
+func MonthlyReport(t time.Time) (err error) {
 	db, err := DbConnection()
 	if err != nil {
 		return
@@ -179,10 +178,6 @@ func Task1(t time.Time) (err error) {
 	if err != nil {
 		return
 	}
-
-	/*var result []struct {
-		serviceId, sum uint
-	}*/
 
 	rows, err := stmt.Query(t)
 	if err != nil {
@@ -199,8 +194,9 @@ func Task1(t time.Time) (err error) {
 			return err
 		}
 		arr = append(arr, []string{strconv.Itoa(servID), strconv.Itoa(sum)})
-		//result = append(result, temp)
+
 	}
+	//////////////
 
 	f, err := os.Create("report.csv")
 	defer f.Close()
@@ -209,14 +205,13 @@ func Task1(t time.Time) (err error) {
 	}
 
 	w := csv.NewWriter(f)
-	defer w.Flush()
-
+	w.Comma = ';'
 	for _, record := range arr {
 		if err := w.Write(record); err != nil {
-			fmt.Println("1)", err)
 			return err
 		}
 	}
+	w.Flush()
 
 	return err
 }

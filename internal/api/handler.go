@@ -70,7 +70,7 @@ func Revenue(c echo.Context) error {
 	return c.String(http.StatusOK, "Ok")
 }
 
-func Task1(c echo.Context) error {
+func MonthlyReport(c echo.Context) error {
 	val := struct{ Date string }{}
 
 	err := json.NewDecoder(c.Request().Body).Decode(&val)
@@ -85,7 +85,14 @@ func Task1(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "Bad request")
 	}
 
-	err = postgresql.Task1(t)
+	err = postgresql.MonthlyReport(t)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "Bad request")
+	}
 
-	return err
+	return c.HTML(http.StatusOK, "<a href=\"http://"+c.Request().Host+"/report\">Download report")
+}
+
+func Report(c echo.Context) error {
+	return c.Attachment("report.csv", "report.csv")
 }
