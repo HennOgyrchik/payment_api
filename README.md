@@ -5,9 +5,9 @@
 1) Какой счет считать резервным? Принято решение, резервный счет имеет ID= -1
 
 ## Инструкция по запуску
-dfsdsdf
-sdfsdf
-sdfsd
+1) `git clone https://github.com/HennOgyrchik/turbo-carnival.git`
+2) `cd turbo-carnival`
+3) `docker compose up -d`
 
 ## Описание методов
 Все методы `PUT` производят запись в таблицу `transactions` о тех или иных изменениях.

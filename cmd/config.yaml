@@ -4,4 +4,3 @@ psql_password: 123
 psql_port: 5432
 db_name: postgres
 db_host: postgres
-
