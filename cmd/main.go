@@ -15,20 +15,15 @@ func main() {
 	}
 	c := config.GetConfig()
 
-	////////////////////////////////////////////////////////////
-
 	e := echo.New()
 
-	// Route => handler
+	e.GET("/balance", api.GetBalance)           //получение баланса пользователя
+	e.PUT("/replenish", api.ReplenishBalance)   //пополнение счета пользователя
+	e.PUT("/reserve", api.Reserve)              //резервирование средств со счета пользователя
+	e.PUT("/revenue", api.Revenue)              //признание выручки
+	e.GET("/monthly_report", api.MonthlyReport) //формирование месячного отчета
+	e.GET("/report", api.Report)                //получение отчета
 
-	e.GET("/balance", api.GetBalance)
-	e.PUT("/replenish", api.ReplenishBalance)
-	e.PUT("/reserve", api.Reserve)
-	e.PUT("/revenue", api.Revenue)
-	e.GET("/monthly_report", api.MonthlyReport)
-	e.GET("/report", api.Report)
-
-	// Start the Echo server
 	e.Logger.Fatal(e.Start(c.ServerAddr))
 
 }

@@ -3,7 +3,7 @@ info:
   title: Swagger Turbo-Carnival - OpenAPI 3.0
   version: 1.0.1
 servers:
-  - url: https://192.168.0.123:1010/
+  - url: localhost:1010
 paths:
   /balance:
     get:
@@ -22,7 +22,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Balance'
+                $ref: '#/components/schemas/Cash'
         '400':
           description: Bad request
   /replenish:
@@ -73,29 +73,61 @@ paths:
           description: Successful operation
         '400':
           description: Bad request
+  /monthly_report:
+    get:
+      summary: Формирование месячного отчета
+      description: Формирование месячного отчета по операциям
+      operationId: MonthlyReport
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Date'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          links:
+            Report:
+              $ref: '#/components/links/ReportLink'
+        '400':
+          description: Bad request
+  /report:
+    get:
+      summary: Получение месячного отчета
+      description: Скачивание отчета
+      operationId: Report
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/Report'
 
 components:
+  links:
+    ReportLink:
+      description: Скачивание отчета
+      operationId: Report
   schemas:
     ID:
       type: object
       properties:
-        Id:
+        User_id:
           type: integer
           format: uint
           example: 10
-    Balance:
+    Cash:
       type: object
       properties:
-        Id:
-          type: integer
-          example: 10
         Cash:
           type: integer
           example: 100
     IDAndCount:
       type: object
       properties:
-        Id:
+        User_id:
           type: integer
           format: uint
           example: 10
@@ -106,7 +138,7 @@ components:
     FullStruct:
       type: object
       properties:
-        Id:
+        User_id:
           type: integer
           format: uint
           example: 10
@@ -122,3 +154,19 @@ components:
           type: integer
           format: uint
           example: 50
+    Date:
+      type: object
+      properties:
+        Date:
+          type: string
+          format: date
+          example: "2022-11"
+    Report:
+      type: object
+      properties:
+        Service_ID:
+          type: integer
+          example: 2
+        Sum:
+          type: integer
+          example: 150

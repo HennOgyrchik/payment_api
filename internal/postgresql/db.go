@@ -3,6 +3,7 @@ package postgresql
 import (
 	"database/sql"
 	"encoding/csv"
+	"fmt"
 	_ "github.com/lib/pq"
 	"os"
 	"strconv"
@@ -33,9 +34,7 @@ func (u *User) checkUser(db *sql.DB) (err error) {
 func DbConnection() (*sql.DB, error) {
 	c := config.GetConfig()
 	connStr := fmt.Sprintf("user=%s password=%s dbname=postgres sslmode=disable host=%s port=%s", c.PSQLLogin, c.PSQLPass, c.DBHost, c.PSQLPort)
-	//fmt.Println(test)
 
-	//connStr := "user=test password=123 dbname=postgres sslmode=disable host=postgres port=5432"
 	db, err := sql.Open("postgres", connStr)
 
 	if err != nil {
@@ -127,7 +126,7 @@ func WriteTransaction(user *User) (err error) {
 	if err != nil {
 		return
 	}
-	//var val string
+
 	err = stmt.QueryRow(user.Id, user.ServiceID, user.OrderID, user.Count).Scan(&val)
 	if err != nil {
 		return
@@ -201,7 +200,6 @@ func MonthlyReport(t time.Time) (err error) {
 		arr = append(arr, []string{strconv.Itoa(servID), strconv.Itoa(sum)})
 
 	}
-	//////////////
 
 	f, err := os.Create("report.csv")
 	defer f.Close()
