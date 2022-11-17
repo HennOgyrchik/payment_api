@@ -8,6 +8,7 @@
 1) `git clone https://github.com/HennOgyrchik/turbo-carnival.git`
 2) `cd turbo-carnival`
 3) `docker compose up -d`
+4) `docker compose exec -T  postgres psql -U test -d postgres < <(cat internal/postgresql/struct_db.sql)`
 
 ## Описание методов
 Все методы `PUT` производят запись в таблицу `transactions` о тех или иных изменениях.
@@ -86,5 +87,5 @@
 
 Возвращает ссылку на скачивание отчета в формате `.csv`
 
-### 5) (PUT) /report
+### 6) (GET) /report
 Скачивает сформированный отчет
