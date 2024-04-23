@@ -1,7 +1,3 @@
-СУБД: PostgreSQL
-## Список вопросов
-1) Какой счет считать резервным? Принято решение, резервный счет имеет ID= -1
-
 ## Инструкция по запуску
 1) `git clone https://github.com/HennOgyrchik/turbo-carnival.git`
 2) `cd turbo-carnival`
