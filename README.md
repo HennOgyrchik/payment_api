@@ -4,7 +4,7 @@
 Для хранения данных используется PostgreSQL.
 ## Инструкция по запуску
 1) `git clone https://github.com/HennOgyrchik/payment_api.git`
-2) `cd turbo-carnival`
+2) `cd payment_api`
 3) `docker compose up -d`
 4) `docker compose exec -T  postgres psql -U test -d postgres < <(cat internal/postgresql/struct_db.sql)`
 
