@@ -1,5 +1,9 @@
+## Описание
+Микросервис для работы с балансом пользователя (зачисление и списание средств, перевод от пользователя к пользователю, просмотр баланса). Представляет собой HTTP API и принимает/отправляет запросы в формате JSON. Реализованы методы зачисления, списания, перевода средств и возможность получения ежемесячного отчета в формате `.csv`
+
+Для хранения данных используется PostgreSQL.
 ## Инструкция по запуску
-1) `git clone https://github.com/HennOgyrchik/turbo-carnival.git`
+1) `git clone https://github.com/HennOgyrchik/payment_api.git`
 2) `cd turbo-carnival`
 3) `docker compose up -d`
 4) `docker compose exec -T  postgres psql -U test -d postgres < <(cat internal/postgresql/struct_db.sql)`
